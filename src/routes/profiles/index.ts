@@ -19,11 +19,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      const { id } = request;
+      const { id } = request.params;
 
-      const profile = await this.db.profiles.findOne(id);
-
-      if (!profile) reply.notFound("Profile not found!");
+      const profile = await this.db.profiles.findOne({ key: "id", equals: id });
+      if (!profile) throw reply.notFound();
 
       return profile as ProfileEntity;
     }
@@ -38,6 +37,19 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<ProfileEntity> {
       const { body } = request;
+      const { userId } = body;
+
+      const memberType = await this.db.memberTypes.findOne({
+        key: "id",
+        equals: body.memberTypeId,
+      });
+
+      const profile = await this.db.profiles.findOne({
+        key: "userId",
+        equals: userId,
+      });
+
+      if (profile || !memberType) throw reply.badRequest();
 
       const createdProfile = await this.db.profiles.create(body);
       return createdProfile;
@@ -53,6 +65,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply): Promise<ProfileEntity> {
       const { id } = request.params;
+
+      const profile = await this.db.profiles.findOne({ key: "id", equals: id });
+      if (!profile) throw reply.badRequest();
 
       const deletedUser = await this.db.profiles.delete(id);
       return deletedUser;
@@ -70,6 +85,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     async function (request, reply): Promise<ProfileEntity> {
       const { id } = request.params;
       const { body } = request;
+
+      const profile = await this.db.profiles.findOne({ key: "id", equals: id });
+      if (!profile) throw reply.badRequest();
 
       const patchedProfile = await this.db.profiles.change(id, body);
       return patchedProfile;

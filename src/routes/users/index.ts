@@ -23,10 +23,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const id = request.id;
-      const user = await this.db.users.findOne(id);
+      const { id } = request.params;
 
-      if (!user) reply.notFound("No such user!");
+      const user = await this.db.users.findOne({ key: "id", equals: id });
+      if (!user) throw reply.notFound();
 
       return user as UserEntity;
     }
@@ -47,20 +47,6 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     }
   );
 
-  fastify.delete(
-    "/:id",
-    {
-      schema: {
-        params: idParamSchema,
-      },
-    },
-    async function (request, reply): Promise<UserEntity> {
-      const { id } = request;
-      const deletedUser = await this.db.users.delete(id);
-      return deletedUser;
-    }
-  );
-
   fastify.post(
     "/:id/subscribeTo",
     {
@@ -70,13 +56,31 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const { id } = request;
-      const { userId } = request.body;
+      const { id: curUserID } = request.params;
+      const { userId: idSubscribeFor } = request.body;
+      const user = await fastify.db.users.findOne({
+        key: "id",
+        equals: curUserID,
+      });
+      const subscribe = await fastify.db.users.findOne({
+        key: "id",
+        equals: idSubscribeFor,
+      });
 
-      const user = (await this.db.users.findOne(id)) as UserEntity;
-      user.subscribedToUserIds.push(userId);
+      const usersExist = subscribe && user;
+      if (!usersExist) throw reply.badRequest();
 
-      const patchedUser = await this.db.users.change(id, user);
+      const alreadySubscribed =
+        subscribe.subscribedToUserIds.includes(curUserID);
+
+      if (alreadySubscribed) {
+        return subscribe;
+      }
+
+      const patchedUser = await this.db.users.change(idSubscribeFor, {
+        subscribedToUserIds: [...subscribe.subscribedToUserIds, curUserID],
+      });
+
       return patchedUser;
     }
   );
@@ -90,16 +94,84 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const { id } = request;
-      const { userId } = request.body;
+      const { id: curUserID } = request.params;
+      const { userId: idUnsubscribeFrom } = request.body;
+      const user = await fastify.db.users.findOne({
+        key: "id",
+        equals: curUserID,
+      });
+      const unsubscribe = await fastify.db.users.findOne({
+        key: "id",
+        equals: idUnsubscribeFrom,
+      });
 
-      const user = (await this.db.users.findOne(id)) as UserEntity;
-      user.subscribedToUserIds = user.subscribedToUserIds.filter(
-        (id) => id !== userId
+      const userExists = unsubscribe && user;
+
+      if (!userExists) {
+        throw reply.badRequest();
+      }
+
+      const userSubscribedToAnotherUser =
+        unsubscribe.subscribedToUserIds.includes(curUserID);
+      const selfUnsubscribe = idUnsubscribeFrom === curUserID;
+
+      if (!userSubscribedToAnotherUser || selfUnsubscribe)
+        throw reply.badRequest();
+
+      const editedSubscriptions = unsubscribe.subscribedToUserIds.filter(
+        (id) => id !== curUserID
       );
 
-      const patchedUser = await this.db.users.change(id, user);
+      const patchedUser = await this.db.users.change(idUnsubscribeFrom, {
+        subscribedToUserIds: editedSubscriptions,
+      });
+
       return patchedUser;
+    }
+  );
+
+  fastify.delete(
+    "/:id",
+    {
+      schema: {
+        params: idParamSchema,
+      },
+    },
+    async function (request, reply): Promise<UserEntity> {
+      const { id } = request.params;
+
+      const user = await this.db.users.findOne({ key: "id", equals: id });
+      if (!user) throw reply.badRequest();
+
+      const userPosts = await this.db.posts.findMany({
+        key: "userId",
+        equals: id,
+      });
+      const userProfile = await this.db.profiles.findOne({
+        key: "userId",
+        equals: id,
+      });
+      const userFollowers = await this.db.users.findMany({
+        key: "subscribedToUserIds",
+        inArray: id,
+      });
+
+      if (userProfile) await this.db.profiles.delete(userProfile.id);
+      await Promise.all(userPosts.map((post) => this.db.posts.delete(post.id)));
+      await Promise.all(
+        userFollowers.map((user) => {
+          const subscriptions = user.subscribedToUserIds.filter(
+            (item) => item !== id
+          );
+
+          return this.db.users.change(user.id, {
+            subscribedToUserIds: subscriptions,
+          });
+        })
+      );
+
+      const deletedUser = await this.db.users.delete(id);
+      return deletedUser;
     }
   );
 
@@ -112,7 +184,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const { id, body } = request;
+      const { id } = request.params;
+      const { body } = request;
+
+      const user = await this.db.users.findOne({ key: "id", equals: id });
+      if (!user) throw reply.badRequest();
+
       const patchedUser = await this.db.users.change(id, body);
 
       return patchedUser;

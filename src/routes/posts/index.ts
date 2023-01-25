@@ -19,9 +19,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const { id } = request;
+      const { id } = request.params;
+      const post = await this.db.posts.findOne({ key: "id", equals: id });
 
-      const post = await this.db.posts.findOne(id);
+      if (!post) throw reply.notFound();
       return post as PostEntity;
     }
   );
@@ -51,6 +52,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     async function (request, reply): Promise<PostEntity> {
       const { id } = request.params;
 
+      const post = await this.db.posts.findOne({ key: "id", equals: id });
+      if (!post) throw reply.badRequest();
+
       const deletedPost = await this.db.posts.delete(id);
       return deletedPost;
     }
@@ -65,11 +69,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const { body, params } = request;
-      const { id } = params;
+      const { body } = request;
+      const { id } = request.params;
+
+      const post = await this.db.posts.findOne({ key: "id", equals: id });
+      if (!post) throw reply.badRequest();
 
       const patchedPost = await this.db.posts.change(id, body);
-
       return patchedPost;
     }
   );
