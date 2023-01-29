@@ -11,3 +11,15 @@ export const createPost = async (data: any, fastify: FastifyInstance) => {
 
   return fastify.db.posts.create(data);
 };
+
+export const updatePost = async (
+  postId: string,
+  data: any,
+  fastify: FastifyInstance
+) => {
+  const post = await fastify.db.posts.findOne({ key: "id", equals: postId });
+  if (!post) throw fastify.httpErrors.badRequest();
+
+  const patchedPost = await fastify.db.posts.change(postId, data);
+  return patchedPost;
+};

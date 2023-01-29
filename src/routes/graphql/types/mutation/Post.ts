@@ -1,4 +1,7 @@
-import { GraphQLInputObjectType, GraphQLNonNull } from "graphql/type/definition";
+import {
+  GraphQLInputObjectType,
+  GraphQLNonNull,
+} from "graphql/type/definition";
 import { GraphQLString } from "graphql/type/scalars";
 
 export const uPost = new GraphQLInputObjectType({
@@ -6,7 +9,6 @@ export const uPost = new GraphQLInputObjectType({
   fields: {
     title: { type: GraphQLString },
     content: { type: GraphQLString },
-    userId: { type: GraphQLString },
   },
 });
 
