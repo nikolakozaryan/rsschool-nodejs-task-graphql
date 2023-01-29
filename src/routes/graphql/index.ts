@@ -4,6 +4,9 @@ import { GraphQLSchema } from "graphql/type";
 import { Mutation } from "./fields/mutationFields";
 import { Query } from "./fields/queryFields";
 import { graphqlBodySchema } from "./schema";
+import { validate } from "graphql/validation";
+import depthLimit = require("graphql-depth-limit");
+import { parse } from "graphql";
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -18,7 +21,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     async function (request, reply) {
       const { query: src, variables } = request.body;
 
-      const schema = new GraphQLSchema({
+      const schema: GraphQLSchema = new GraphQLSchema({
         query: Query,
         mutation: Mutation,
       });
@@ -30,6 +33,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         variableValues: variables,
       });
 
+      const errors = validate(schema, parse(src as string), [depthLimit(6)]);
+
+      if (errors.length) {
+        throw this.httpErrors.badRequest("Query depth limit exceeded!");
+      }
+      
       return result;
     }
   );
