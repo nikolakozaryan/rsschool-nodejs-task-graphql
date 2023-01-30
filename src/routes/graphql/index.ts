@@ -7,6 +7,14 @@ import { graphqlBodySchema } from "./schema";
 import { validate } from "graphql/validation";
 import depthLimit = require("graphql-depth-limit");
 import { parse } from "graphql";
+import DataLoader = require("dataloader");
+import {
+  postsBatch,
+  profilesBatch,
+  membersBatch,
+  subscribedToUserBatch,
+  userSubscribedToBatch,
+} from "./loader-batches/batches";
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -26,19 +34,32 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         mutation: Mutation,
       });
 
+      const context = {
+        fastify,
+        postsLoader: new DataLoader(postsBatch(fastify)),
+        profilesLoader: new DataLoader(profilesBatch(fastify)),
+        membersLoader: new DataLoader(membersBatch(fastify)),
+        subscribedToUserLoader: new DataLoader(subscribedToUserBatch(fastify)),
+        userSubscribedToLoader: new DataLoader(userSubscribedToBatch(fastify)),
+      };
+
       const result = await graphql({
         schema,
         source: src as string,
-        contextValue: fastify,
+        contextValue: context,
         variableValues: variables,
       });
 
       const errors = validate(schema, parse(src as string), [depthLimit(6)]);
 
       if (errors.length) {
-        throw this.httpErrors.badRequest("Query depth limit exceeded!");
+        return {
+          errors,
+          message: "Query depth limit exceeded!",
+          data: null,
+        };
       }
-      
+
       return result;
     }
   );

@@ -17,50 +17,52 @@ export const Query = new GraphQLObjectType({
       args: {
         id: { type: GraphQLID },
       },
-      resolve: async (prev, args, fastify) =>
-        getEntity(EntityTypes.USER, args.id, fastify),
+      resolve: async (source, args, context) =>
+        getEntity(EntityTypes.USER, args.id, context.fastify),
     },
     users: {
       type: new GraphQLList(User),
-      resolve: (prev, args, fastify) => getEntities(EntityTypes.USER, fastify),
+      resolve: (source, args, context) =>
+        getEntities(EntityTypes.USER, context.fastify),
     },
     post: {
       type: Post,
       args: {
         id: { type: GraphQLID },
       },
-      resolve: async (_, args, fastify) =>
-        getEntity(EntityTypes.POST, args.id, fastify),
+      resolve: async (_, args, context) =>
+        getEntity(EntityTypes.POST, args.id, context.fastify),
     },
     posts: {
       type: new GraphQLList(Post),
-      resolve: (prev, args, fastify) => getEntities(EntityTypes.POST, fastify),
+      resolve: (source, args, context) =>
+        getEntities(EntityTypes.POST, context.fastify),
     },
     profile: {
       type: Profile,
       args: {
         id: { type: GraphQLID },
       },
-      resolve: async (_, args, fastify) =>
-        getEntity(EntityTypes.PROFILE, args.id, fastify),
+      resolve: async (_, args, context) =>
+        getEntity(EntityTypes.PROFILE, args.id, context.fastify),
     },
     profiles: {
       type: new GraphQLList(Profile),
-      resolve: (prev, args, fastify) =>
-        getEntities(EntityTypes.PROFILE, fastify),
+      resolve: (source, args, context) =>
+        getEntities(EntityTypes.PROFILE, context.fastify),
     },
     membertype: {
       type: MemberType,
       args: {
         id: { type: GraphQLID },
       },
-      resolve: async (_, args, fastify) =>
-        getEntity(EntityTypes.MEMBER, args.id, fastify),
+      resolve: async (_, args, context) =>
+        getEntity(EntityTypes.MEMBER, args.id, context.fastify),
     },
     membertypes: {
       type: new GraphQLList(MemberType),
-      resolve: (prev, args, fastify) =>
-        getEntities(EntityTypes.MEMBER, fastify),
+      resolve: (source, args, context) =>
+        getEntities(EntityTypes.MEMBER, context.fastify),
     },
   },
 });

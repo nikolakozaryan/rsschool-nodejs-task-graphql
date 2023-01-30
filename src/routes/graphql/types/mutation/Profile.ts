@@ -14,7 +14,6 @@ export const uProfile = new GraphQLInputObjectType({
     street: { type: GraphQLString },
     city: { type: GraphQLString },
     memberTypeId: { type: GraphQLString },
-    userId: { type: GraphQLString },
   },
 });
 

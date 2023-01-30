@@ -1,4 +1,3 @@
-import { FastifyInstance } from "fastify";
 import {
   GraphQLID,
   GraphQLList,
@@ -21,55 +20,33 @@ export const User: GraphQLOutputType = new GraphQLObjectType({
     subscribedToUserIds: { type: new GraphQLList(GraphQLString) },
     profile: {
       type: Profile,
-      resolve: async (prev: UserEntity, _: any, context: FastifyInstance) =>
-        context.db.profiles.findOne({
-          key: "userId",
-          equals: prev.id,
-        }),
+      resolve: async (source: UserEntity, _: any, context) =>
+        context.profilesLoader.load(source.id),
     },
     posts: {
       type: new GraphQLList(Post),
-      resolve: async (prev: UserEntity, _: any, context: FastifyInstance) =>
-        await context.db.posts.findMany({
-          key: "userId",
-          equals: prev.id,
-        }),
+      resolve: async (source: UserEntity, _, context) =>
+        context.postsLoader.load(source.id),
     },
     memberType: {
       type: MemberType,
-      resolve: async (prev: UserEntity, _: any, context: FastifyInstance) => {
-        const profile = await context.db.profiles.findOne({
-          key: "userId",
-          equals: prev.id,
-        });
+      resolve: async (source: UserEntity, _, context) => {
+        const profile = await context.profilesLoader.load(source.id);
 
-        if (!profile) return null;
-
-        return context.db.memberTypes.findOne({
-          key: "id",
-          equals: profile.memberTypeId,
-        });
+        return profile
+          ? context.membersLoader.load(profile.memberTypeId)
+          : null;
       },
     },
     userSubscribedTo: {
       type: new GraphQLList(User),
-      resolve: async (prev: UserEntity, _: any, context: FastifyInstance) =>
-        context.db.users.findMany({
-          key: "subscribedToUserIds",
-          inArray: prev.id,
-        }),
+      resolve: async (source: UserEntity, _, context) =>
+        context.userSubscribedToLoader.load(source.id),
     },
     subscribedToUser: {
       type: new GraphQLList(User),
-      resolve: async (prev: UserEntity, _: any, context: FastifyInstance) =>
-        Promise.all(
-          prev.subscribedToUserIds.map((id) =>
-            context.db.users.findOne({
-              key: "id",
-              equals: id,
-            })
-          )
-        ),
+      resolve: async (source: UserEntity, _, context) =>
+        context.subscribedToUserLoader.load(source.id),
     },
   }),
 });

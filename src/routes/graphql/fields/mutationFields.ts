@@ -25,21 +25,21 @@ export const Mutation = new GraphQLObjectType({
       args: {
         data: { type: new GraphQLNonNull(cUser) },
       },
-      resolve: (_, args, context) => createUser(args.data, context),
+      resolve: (_, args, context) => createUser(args.data, context.fastify),
     },
     createProfile: {
       type: Profile,
       args: {
         data: { type: new GraphQLNonNull(cProfile) },
       },
-      resolve: (_, args, context) => createProfile(args.data, context),
+      resolve: (_, args, context) => createProfile(args.data, context.fastify),
     },
     createPost: {
       type: Post,
       args: {
         data: { type: new GraphQLNonNull(cPost) },
       },
-      resolve: (_, args, context) => createPost(args.data, context),
+      resolve: (_, args, context) => createPost(args.data, context.fastify),
     },
     updateUser: {
       type: User,
@@ -47,7 +47,7 @@ export const Mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: uUser },
       },
-      resolve: (_, args, context) => updateUser(args.id, args.data, context),
+      resolve: (_, args, context) => updateUser(args.id, args.data, context.fastify),
     },
     updateProfile: {
       type: Profile,
@@ -55,7 +55,7 @@ export const Mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: uProfile },
       },
-      resolve: (_, args, context) => updateProfile(args.id, args.data, context),
+      resolve: (_, args, context) => updateProfile(args.id, args.data, context.fastify),
     },
     updatePost: {
       type: Post,
@@ -63,7 +63,7 @@ export const Mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: uPost },
       },
-      resolve: (_, args, context) => updatePost(args.id, args.data, context),
+      resolve: (_, args, context) => updatePost(args.id, args.data, context.fastify),
     },
     updateMemberType: {
       type: MemberType,
@@ -71,7 +71,7 @@ export const Mutation = new GraphQLObjectType({
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: uMemberType },
       },
-      resolve: (_, args, context) => updateMember(args.id, args.data, context),
+      resolve: (_, args, context) => updateMember(args.id, args.data, context.fastify),
     },
     subscribe: {
       type: User,
@@ -79,7 +79,7 @@ export const Mutation = new GraphQLObjectType({
         id: { type: GraphQLID },
         targetId: { type: GraphQLID },
       },
-      resolve: (_, args, context) => subscribe(args.id, args.targetId, context),
+      resolve: (_, args, context) => subscribe(args.id, args.targetId, context.fastify),
     },
     unsubscribe: {
       type: User,
@@ -88,7 +88,7 @@ export const Mutation = new GraphQLObjectType({
         targetId: { type: GraphQLID },
       },
       resolve: (_, args, context) =>
-        unsubscribe(args.id, args.targetId, context),
+        unsubscribe(args.id, args.targetId, context.fastify),
     },
   },
 });
