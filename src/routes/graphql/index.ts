@@ -2,11 +2,13 @@ import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import { createGqlResponseSchema, gqlResponseSchema } from './schemas.js';
 import { graphql, GraphQLObjectType, GraphQLSchema, parse, validate } from 'graphql';
 import depthLimit from 'graphql-depth-limit';
-import { MemberTypesQuery } from './member-types/queries.js';
-import { PostsQuery } from './posts/queries.js';
-import { ProfilesQuery } from './profiles/queries.js';
-import { StatsQuery } from './stats/queries.js';
-import { UsersQuery } from './users/queries.js';
+import { MemberTypesQueries } from './queries/member-type.queries.js';
+import { PostsQueries } from './queries/post.queries.js';
+import { ProfilesQueries } from './queries/profile.queries.js';
+import { UsersQueries } from './queries/user.queries.js';
+import { PostsMutations } from './mutations/post.mutations.js';
+import { ProfilesMutations } from './mutations/profile.mutations.js';
+import { UsersMutations } from './mutations/user.mutations.js';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   const { prisma } = fastify;
@@ -26,17 +28,20 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const query = new GraphQLObjectType({
         name: 'Query',
         fields: () => ({
-          ...MemberTypesQuery,
-          ...PostsQuery,
-          ...ProfilesQuery,
-          ...StatsQuery,
-          ...UsersQuery,
+          ...MemberTypesQueries,
+          ...PostsQueries,
+          ...ProfilesQueries,
+          ...UsersQueries,
         }),
       });
 
       const mutation = new GraphQLObjectType({
         name: 'Mutation',
-        fields: () => ({}),
+        fields: () => ({
+          ...PostsMutations,
+          ...ProfilesMutations,
+          ...UsersMutations,
+        }),
       });
 
       const schema = new GraphQLSchema({ query, mutation });
