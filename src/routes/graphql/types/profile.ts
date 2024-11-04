@@ -7,9 +7,13 @@ import {
 } from 'graphql';
 import { MemberTypeIdEnum } from './member-type.js';
 import { UUIDType } from './uuid.js';
+import { Static } from '@sinclair/typebox';
+import { profileSchema } from '../../profiles/schemas.js';
+
+export type Profile = Static<typeof profileSchema>;
 
 export const ProfileType = new GraphQLObjectType({
-  name: 'PostType',
+  name: 'Profile',
   fields: () => ({
     id: { type: new GraphQLNonNull(UUIDType) },
     isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
@@ -18,7 +22,7 @@ export const ProfileType = new GraphQLObjectType({
   }),
 });
 
-export const ChangeProfileInput = new GraphQLInputObjectType({
+export const ChangeProfileInputType = new GraphQLInputObjectType({
   name: 'ChangeProfileInput',
   fields: {
     isMale: { type: GraphQLBoolean },
@@ -27,7 +31,7 @@ export const ChangeProfileInput = new GraphQLInputObjectType({
   },
 });
 
-export const CreateProfileInput = new GraphQLInputObjectType({
+export const CreateProfileInputType = new GraphQLInputObjectType({
   name: 'CreateProfileInput',
   fields: {
     isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
