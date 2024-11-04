@@ -1,7 +1,16 @@
 import { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import { createGqlResponseSchema, gqlResponseSchema } from './schemas.js';
-import { graphql, GraphQLObjectType, GraphQLSchema, parse, validate } from 'graphql';
+import {
+  graphql,
+  GraphQLError,
+  GraphQLObjectType,
+  GraphQLSchema,
+  parse,
+  specifiedRules,
+  validate,
+} from 'graphql';
 import depthLimit from 'graphql-depth-limit';
+import { generateLoaders } from './loaders/loaders.js';
 import { MemberTypesQueries } from './queries/member-type.queries.js';
 import { PostsQueries } from './queries/post.queries.js';
 import { ProfilesQueries } from './queries/profile.queries.js';
@@ -22,40 +31,46 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         200: gqlResponseSchema,
       },
     },
-    async handler(req) {
-      const reqQuery = String(req.body.query);
+    handler: async (req) => {
+        const reqQuery = String(req.body.query);
 
-      const query = new GraphQLObjectType({
-        name: 'Query',
-        fields: () => ({
-          ...MemberTypesQueries,
-          ...PostsQueries,
-          ...ProfilesQueries,
-          ...UsersQueries,
-        }),
-      });
+        const query = new GraphQLObjectType({
+          name: 'RootQueryType',
+          fields: {
+            ...MemberTypesQueries,
+            ...UsersQueries,
+            ...PostsQueries,
+            ...ProfilesQueries,
+          },
+        });
 
-      const mutation = new GraphQLObjectType({
-        name: 'Mutation',
-        fields: () => ({
-          ...PostsMutations,
-          ...ProfilesMutations,
-          ...UsersMutations,
-        }),
-      });
+        const mutation = new GraphQLObjectType({
+          name: 'Mutations',
+          fields: {
+            ...PostsMutations,
+            ...ProfilesMutations,
+            ...UsersMutations,
+          },
+        });
 
-      const schema = new GraphQLSchema({ query, mutation });
+        const schema = new GraphQLSchema({ query, mutation });
 
-      const errors = validate(schema, parse(reqQuery), [depthLimit(5)]);
+        const loaders = generateLoaders(prisma);
 
-      if (errors.length) return { errors };
+        const errors = validate(schema, parse(reqQuery), [
+          ...specifiedRules,
+          depthLimit(5),
+        ]);
 
-      return await graphql({
-        schema,
-        source: reqQuery,
-        variableValues: req.body.variables,
-        contextValue: { db: prisma },
-      });
+        if (errors.length) return { errors };
+
+        return graphql({
+          schema,
+          source: reqQuery,
+          variableValues: req.body.variables,
+          contextValue: { db: prisma, loaders },
+        });
+      
     },
   });
 };
