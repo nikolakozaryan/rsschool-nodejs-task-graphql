@@ -17,7 +17,7 @@ export const ProfilesMutations: Record<string, GraphQLFieldConfig<unknown, ICont
     },
     resolve: async (
       _,
-      dto: Static<(typeof createProfileSchema)['body']>,
+      { dto }: { dto: Static<(typeof createProfileSchema)['body']> },
       { db, loaders: { profileLoader } },
     ) => {
       const profile = await db.profile.create({

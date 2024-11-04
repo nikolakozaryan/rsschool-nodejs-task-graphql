@@ -15,7 +15,7 @@ export type Profile = Static<typeof profileSchema>;
 
 export const ProfileType = new GraphQLObjectType({
   name: 'Profile',
-  fields: () => ({
+  fields: {
     id: { type: new GraphQLNonNull(UUIDType) },
     isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
     yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
@@ -29,7 +29,7 @@ export const ProfileType = new GraphQLObjectType({
         return memberTypeLoader.load(memberTypeId);
       },
     },
-  }),
+  },
 });
 
 export const ChangeProfileInputType = new GraphQLInputObjectType({
@@ -46,7 +46,7 @@ export const CreateProfileInputType = new GraphQLInputObjectType({
   fields: {
     isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
     yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
-    memberTypeId: { type: new GraphQLNonNull(MemberTypeIdEnum) },
     userId: { type: new GraphQLNonNull(UUIDType) },
+    memberTypeId: { type: new GraphQLNonNull(MemberTypeIdEnum) },
   },
 });
