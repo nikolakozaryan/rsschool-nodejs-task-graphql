@@ -39,17 +39,15 @@ export const UserType = new GraphQLObjectType({
     userSubscribedTo: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(UserType))),
       resolve: async (parent, _, { loaders: { userLoader, userSubscribedToLoader } }) => {
-        if (parent.userSubscribedTo) {
-          const authorIds = parent.userSubscribedTo.map(
-            (sub) => sub.authorId,
-          ) as string[];
-
-          const authors = await userLoader.loadMany(authorIds);
-
-          return authors;
+        if (!parent.userSubscribedTo) {
+          return userSubscribedToLoader.load(parent.id);
         }
 
-        return userSubscribedToLoader.load(parent.id);
+        const authorIds = parent.userSubscribedTo.map((sub) => sub.authorId) as string[];
+
+        const authors = await userLoader.loadMany(authorIds);
+
+        return authors;
       },
     },
 
@@ -60,15 +58,15 @@ export const UserType = new GraphQLObjectType({
         _,
         { loaders: { userLoader, subscribedToUserLoader } }: IContext,
       ) => {
-        if (parent.subscribedToUser) {
-          const subscriberIds = parent.subscribedToUser.map((sub) => sub.userId);
-
-          const subscribers = await userLoader.loadMany(subscriberIds);
-
-          return subscribers;
+        if (!parent.subscribedToUser) {
+          return subscribedToUserLoader.load(parent.id);
         }
 
-        return subscribedToUserLoader.load(parent.id);
+        const subscriberIds = parent.subscribedToUser.map((sub) => sub.userId);
+
+        const subscribers = await userLoader.loadMany(subscriberIds);
+
+        return subscribers;
       },
     },
   }),
