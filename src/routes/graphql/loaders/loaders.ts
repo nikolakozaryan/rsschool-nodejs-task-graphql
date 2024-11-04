@@ -19,7 +19,7 @@ export function generateLoaders(prisma: PrismaClient) {
         return acc;
       }, new Map<string, Member>());
 
-      return keys.map((id) => map.get(id) || null);
+      return keys.map((id) => map.get(id));
     }),
 
     postLoader: new DataLoader(async (keys: readonly string[]) => {
@@ -32,7 +32,7 @@ export function generateLoaders(prisma: PrismaClient) {
         return acc;
       }, new Map<string, Post>());
 
-      return keys.map((id) => map.get(id) || null);
+      return keys.map((id) => map.get(id));
     }),
 
     profileLoader: new DataLoader(async (keys: readonly string[]) => {
@@ -41,11 +41,11 @@ export function generateLoaders(prisma: PrismaClient) {
       });
 
       const map = rows.reduce((acc, item) => {
-        acc.set(item.id, item);
+        acc.set(item.userId, item);
         return acc;
       }, new Map<string, Profile>());
 
-      return keys.map((userId) => map.get(userId) || null);
+      return keys.map((userId) => map.get(userId));
     }),
 
     userLoader: new DataLoader(async (keys: readonly string[]) => {
@@ -58,7 +58,7 @@ export function generateLoaders(prisma: PrismaClient) {
         return acc;
       }, new Map<string, User>());
 
-      return keys.map((id) => map.get(id) || null);
+      return keys.map((id) => map.get(id));
     }),
 
     postsByAuthorLoader: new DataLoader(async (keys: readonly string[]) => {

@@ -19,7 +19,7 @@ export const MemberTypeType = new GraphQLObjectType({
 export const MemberTypeIdEnum = new GraphQLEnumType({
   name: 'MemberTypeId',
   values: {
-    basic: { value: MemberTypeId.BASIC },
-    business: { value: MemberTypeId.BUSINESS },
+    BASIC: { value: MemberTypeId.BASIC },
+    BUSINESS: { value: MemberTypeId.BUSINESS },
   },
 });

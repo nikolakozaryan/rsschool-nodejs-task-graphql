@@ -5,10 +5,11 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
 } from 'graphql';
-import { MemberTypeIdEnum } from './member-type.js';
+import { MemberTypeIdEnum, MemberTypeType } from './member-type.js';
 import { UUIDType } from './uuid.js';
 import { Static } from '@sinclair/typebox';
 import { profileSchema } from '../../profiles/schemas.js';
+import { IContext } from './context.js';
 
 export type Profile = Static<typeof profileSchema>;
 
@@ -18,7 +19,16 @@ export const ProfileType = new GraphQLObjectType({
     id: { type: new GraphQLNonNull(UUIDType) },
     isMale: { type: new GraphQLNonNull(GraphQLBoolean) },
     yearOfBirth: { type: new GraphQLNonNull(GraphQLInt) },
-    memberType: { type: new GraphQLNonNull(MemberTypeIdEnum) },
+    memberType: {
+      type: MemberTypeType,
+      resolve: async (
+        { memberTypeId }: Profile,
+        _: unknown,
+        { loaders: { memberTypeLoader } }: IContext,
+      ) => {
+        return memberTypeLoader.load(memberTypeId);
+      },
+    },
   }),
 });
 
